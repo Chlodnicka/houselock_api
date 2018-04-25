@@ -32,6 +32,17 @@ class UserController extends Controller
     }
 
     /**
+     * @Route("/api/check.{_format}", defaults={"_format": "json"}, requirements={"_format": "html|json"},  name="check")
+     */
+    public function checkAction()
+    {
+        if ($this->getUser()) {
+            return new JsonResponse(['data' => $this->getUser()->getRoles()]);
+        }
+        return new JsonResponse(['data' => 'Błędne dane', 500]);
+    }
+
+    /**
      * @Route("/api/all.{_format}", defaults={"_format": "json"}, requirements={"_format": "html|json"},  name="all")
      */
     public function infoAction()

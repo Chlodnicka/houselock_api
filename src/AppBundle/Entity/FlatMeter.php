@@ -81,7 +81,7 @@ class FlatMeter
      * @var \AppBundle\Entity\Flat
      *
      * @ORM\ManyToOne(targetEntity="Flat", inversedBy="flatMeters")
-     * @ORM\@JoinColumn(name="flat_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="flat_id", referencedColumnName="id")
      */
     private $flat;
 
