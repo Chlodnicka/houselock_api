@@ -39,7 +39,8 @@ class Info
             'lastname' => $user->getLastname(),
             'email' => $user->getEmail(),
             'role' => $user->getRoles(),
-            'phone' => $user->getPhone()
+            'phone' => $user->getPhone(),
+            'status' => $user->getUserStatus() ? $user->getUserStatus()->getName() : null
         ];
     }
 
