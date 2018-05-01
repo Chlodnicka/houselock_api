@@ -3,11 +3,12 @@
 use Symfony\Component\HttpFoundation\Request;
 
 require __DIR__.'/../vendor/autoload.php';
+
 if (PHP_VERSION_ID < 70000) {
     include_once __DIR__.'/../var/bootstrap.php.cache';
 }
 
-$kernel = new AppKernel('prod', false);
+$kernel = new AppKernel('prod', true);
 if (PHP_VERSION_ID < 70000) {
     $kernel->loadClassCache();
 }

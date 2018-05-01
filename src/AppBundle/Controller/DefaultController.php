@@ -22,6 +22,16 @@ class DefaultController extends Controller
     }
 
     /**
+     * @Route("/test", name="homepage_test")
+     */
+    public function testAction(Request $request)
+    {
+        return $this->render('default/index.html.twig', [
+            'base_dir' => realpath($this->getParameter('kernel.project_dir')) . 'test',
+        ]);
+    }
+
+    /**
      * @Route("/api/login_check")
      */
     public function adminAction()
