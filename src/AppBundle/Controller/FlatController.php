@@ -9,6 +9,7 @@
 namespace AppBundle\Controller;
 
 
+use AppBundle\Collection\Serialized\FlatInfo;
 use AppBundle\Collection\Serialized\Serialized;
 use AppBundle\Entity\User;
 use AppBundle\Service\FlatService;
@@ -80,11 +81,14 @@ class FlatController extends Controller
      * @Route("/api/flat/{id}.{_format}", defaults={"_format": "json"}, requirements={"_format": "html|json"},  name="flat_show")
      * @Method("GET")
      */
-    public function showAction(int $id)
+    public function flatInfoActon(int $id)
     {
-        //show flat (address/config/prices)
-        $flat = $this->flatService->checkUserFlat($this->getUser(), $id);
-        return new JsonResponse(['flat_info' => new Serialized($flat)]);
+        $user = $this->getUser();
+        if ($user && $this->flatService->checkUserFlat($user, $id)) {
+            $flatInfo = new FlatInfo($this->flatService->getFlat($id));
+            return new JsonResponse(['data' => $flatInfo->getAll()]);
+        }
+        return new JsonResponse(['message' => 'Brak autoryzacji do mieszkania'], 500);
     }
 
     /**

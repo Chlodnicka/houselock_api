@@ -59,24 +59,10 @@ class Info
                 'street' => $flat->getStreet(),
                 'city' => $flat->getCity(),
                 'postal_code' => $flat->getPostalCode(),
-                'tenants' => $this->serializeTenants($flat->getTenants()),
                 'flat_config' => $this->serializeFlatConfig($flat)
             ];
         }
         return $flatsData;
-    }
-
-    protected function serializeTenants($tenants)
-    {
-        $tenantsData = [];
-        foreach ($tenants as $tenant) {
-            /**
-             * @var $user User
-             */
-            $user = $tenant->getUser();
-            $tenantsData[$user->getId()] = $this->serializeUser($user);
-        }
-        return $tenantsData;
     }
 
     protected function serializeFlatConfig(Flat $flat)

@@ -570,5 +570,9 @@ class Flat
         $this->bills[] = $bill;
         return $this;
     }
+
+    public function getLastBill() {
+        return $this->bills->last();
+    }
 }
 
