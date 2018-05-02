@@ -13,6 +13,7 @@ use AppBundle\Entity\User;
 use AppBundle\Entity\UserFlat;
 use AppBundle\Repository\RoleRepository;
 use AppBundle\Repository\UserRepository;
+use AppBundle\Repository\UserStatusRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
@@ -29,15 +30,22 @@ class UserService
      */
     private $roleRepository;
 
+
+    /**
+     * @var UserStatusRepository
+     */
+    private $userStatusRepository;
+
     /**
      * UserService constructor.
      * @param UserRepository $userRepository
      * @param RoleRepository $roleRepository
      */
-    public function __construct(UserRepository $userRepository, RoleRepository $roleRepository)
+    public function __construct(UserRepository $userRepository, RoleRepository $roleRepository, UserStatusRepository $userStatusRepository)
     {
         $this->userRepository = $userRepository;
         $this->roleRepository = $roleRepository;
+        $this->userStatusRepository = $userStatusRepository;
     }
 
     /**
@@ -101,6 +109,36 @@ class UserService
         return $this->userRepository->saveUser($user);
     }
 
+    /**
+     * @param User $user
+     * @param string $email
+     * @param UserPasswordEncoderInterface $passwordEncoder
+     * @return User|null
+     */
+    public function addTenant(User $user, string $email, UserPasswordEncoderInterface $passwordEncoder)
+    {
+        $tenant = $this->userRepository->getOneByCriteria(['email' => $email]);
+        if (!$tenant) {
+            $tenant = new User();
+            $tenant->setEmail($email);
+            $tenant->setPlainPassword(rand(100000, 9999999));
+            $plain = $tenant->getPlainPassword();
+            $password = $passwordEncoder->encodePassword($tenant, $tenant->getPlainPassword());
+            $tenantRole = $this->roleRepository->getTenant();
+            $tenant->setPassword($password);
+            $tenant->setCreatedAt(new \DateTime('now'));
+            $tenant->setCreatedBy($user->getId());
+            $tenant->setUserStatus($this->userStatusRepository->getTemp());
+            $tenant->addRole($tenantRole);
+            $tenantRole->addUser($tenant);
+            $this->userRepository->registerUser($tenant, $tenantRole);
+
+            //send password to user
+
+        }
+        return $tenant;
+    }
+
     public function addTenants(User $user, array $userEmails)
     {
         $tenants = $errors = [];
@@ -110,7 +148,7 @@ class UserService
             if ($tenant && $tenant->getActiveUserFlats()) {
                 $errors[] = ['message' => 'user_already_has_flat', 'email' => $email];
             } else {
-                if($tenant) {
+                if ($tenant) {
                     $tenants[] = $this->userRepository->updateTenant($tenant);
                 } else {
                     $tenants[] = $this->userRepository->createTenant($user, $email, $tenantRole);

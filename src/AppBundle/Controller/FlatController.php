@@ -10,17 +10,20 @@ namespace AppBundle\Controller;
 
 
 use AppBundle\Collection\Serialized\FlatInfo;
+use AppBundle\Collection\Serialized\Info;
 use AppBundle\Collection\Serialized\Serialized;
 use AppBundle\Entity\User;
 use AppBundle\Service\FlatService;
 use AppBundle\Service\MailerService;
 use AppBundle\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\DependencyInjection\Tests\Compiler\J;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class FlatController extends Controller
 {
@@ -81,7 +84,7 @@ class FlatController extends Controller
      * @Route("/api/flat/{id}.{_format}", defaults={"_format": "json"}, requirements={"_format": "html|json"},  name="flat_show")
      * @Method("GET")
      */
-    public function flatInfoActon(int $id)
+    public function flatInfoAction(int $id)
     {
         $user = $this->getUser();
         if ($user && $this->flatService->checkUserFlat($user, $id)) {
@@ -133,26 +136,26 @@ class FlatController extends Controller
     }
 
     /**
-     * @Route("/api/flat/user/{id}invite.{_format}", defaults={"_format": "json"}, requirements={"_format": "html|json"}, name="invite_user")
-     * @Method("GET")
+     * @Route("/api/flat/{id}/user/add.{_format}", defaults={"_format": "json"}, requirements={"_format": "html|json"},  name="user_add")
+     * @Method("POST")
      */
-    public function invitationAction(Request $request, int $id)
+    public function addUserAction(Request $request, int $id, UserPasswordEncoderInterface $passwordEncoder)
     {
-        $flat = $this->flatService->checkUserFlat($this->getUser(), $id);
-        if ($flat) {
-            $data = $request->request->all();
-            $response = $this->userService->addTenants($this->getUser(), $data);
-            if (!empty($response['tenants'])) {
-                $tenants = $this->flatService->addUsersToFlat($flat, $response['tenants']);
-                foreach ($tenants as $tenant) {
-                    $this->mailerService->sendInvitationMail($tenant);
+        try {
+            $flat = $this->flatService->getFlat($id);
+            if ($this->getUser() && $this->flatService->checkUserFlat($this->getUser(), $id)) {
+                $user = $this->userService->addTenant($this->getUser(), $request->request->get('_email'), $passwordEncoder);
+                if ($user->getActiveUserFlats()->isEmpty()) {
+                    $this->flatService->addTenantToFlat($flat, $user);
+                    $userData = new FlatInfo($flat);
+                    return new JsonResponse(['data' => $userData->getAll()]);
                 }
+                return new JsonResponse(['data' => 'Ten lokator jest już przypisany do innego mieszkania', 500]);
             }
+            return new JsonResponse(['data' => 'Błędne dane', 500]);
+        } catch (\Exception $exception) {
+            return new JsonResponse(['data' => $exception->getMessage(), 500]);
         }
-        //add user to flat
-        //send mail to user
-        //return successful response
-        return new JsonResponse(['invite_user']);
     }
 
     /**

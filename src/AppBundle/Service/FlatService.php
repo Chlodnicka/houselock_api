@@ -94,12 +94,8 @@ class FlatService
      * @param Flat $flat
      * @param array $tenants
      */
-    public function addUsersToFlat(Flat $flat, array $tenants)
+    public function addTenantToFlat(Flat $flat, User $tenant)
     {
-        $tenantRole = $this->roleRepository->getTenant();
-        $activeUsers = $this->flatRepository->addUsersToFlat($flat, $tenants, $tenantRole);
-        return $activeUsers->filter(function (UserFlat $userFlat) use ($tenantRole) {
-            return $userFlat->getRole() === $tenantRole;
-        });
+        $this->flatRepository->addTenantToFlat($flat, $tenant, $this->roleRepository->getTenant());
     }
 }

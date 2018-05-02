@@ -222,18 +222,20 @@ class FlatRepository extends Repository
 
     /**
      * @param Flat $flat
-     * @param array $tenants
+     * @param User $user
+     * @param Role $role
+     * @return \Doctrine\Common\Collections\Collection|null
      */
-    public function addUsersToFlat(Flat $flat, array $tenants, Role $role)
+    public function addTenantToFlat(Flat $flat, User $user, Role $role)
     {
-        foreach ($tenants as $tenant) {
-            $userFlat = new UserFlat();
-            $userFlat->setFlat($flat);
-            $userFlat->setUser($tenant);
-            $userFlat->setRole($role);
-            $userFlat->setCreatedAt(new \DateTime('now'));
-            $this->entityManager->persist($userFlat);
-        }
+
+        $userFlat = new UserFlat();
+        $userFlat->setFlat($flat);
+        $userFlat->setUser($user);
+        $userFlat->setRole($role);
+        $userFlat->setCreatedAt(new \DateTime('now'));
+        $this->entityManager->persist($userFlat);
+
         $this->entityManager->flush();
         $this->entityManager->refresh($flat);
         return $flat->getActiveUsersFlats();
